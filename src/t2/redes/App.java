@@ -1,5 +1,8 @@
 package t2.redes;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;
@@ -9,6 +12,7 @@ import javax.swing.*;
 public class App extends javax.swing.JFrame {
 
     private Network network;
+    private JScrollPane scroller;
 
     public App() {
         initComponents();
@@ -24,6 +28,7 @@ public class App extends javax.swing.JFrame {
         menuNovaLeitura = new javax.swing.JRadioButtonMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Identificador de agentes");
 
         jMenu1.setText("Arquivo");
 
@@ -91,9 +96,11 @@ public class App extends javax.swing.JFrame {
     }
 
     public void getAgents() {
+        if(scroller != null){
+            this.remove(scroller);
+        }
         int btnSeparator = 15;
         readNetwork();
-        this.removeAll();
         Agent agenter = network.agents.get(0);
         network.agents.add(agenter);
         network.agents.add(agenter);
@@ -135,7 +142,8 @@ public class App extends javax.swing.JFrame {
         network.agents.add(agenter);
 
         JPanel panel = new JPanel();
-        panel.setSize(380, (network.agents.size() * 40) / 3);
+        panel.setMinimumSize(new Dimension(300, 250));
+        panel.setPreferredSize(new Dimension(300, (network.agents.size() * 40) / 3));
 
         for (Agent agent : network.agents) {
             JButton button = new JButton(agent.ipAddress);
@@ -149,9 +157,12 @@ public class App extends javax.swing.JFrame {
             panel.add(button);
             btnSeparator += 40;
         }
+        scroller = new JScrollPane(panel);
+        scroller.setSize(new Dimension(380, 257));
+        scroller.setLocation(10, 15);
+        this.add(scroller, BorderLayout.CENTER);
 
-        JScrollPane scrollPanel = new JScrollPane(panel);
-        this.add(scrollPanel);
+        pack();
     }
 
     public void readNetwork() {

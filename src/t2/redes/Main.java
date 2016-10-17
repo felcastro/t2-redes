@@ -13,7 +13,7 @@ public class Main {
     private static Network network;    
 
     public static void main(String[] args) throws Exception {
-        network = new Network();
-        System.out.println(network.getAgentByIp("192.168.0.11").getAgentInfo(".1.3.6.1.2.1.1.1.0"));
+        App app = new App();
+        app.setVisible(true);
     }
 }
