@@ -9,6 +9,6 @@ package t2.redes;
  *
  * @author Felipe
  */
-public class Chart {
+public class Point {
     
 }

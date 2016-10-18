@@ -1,8 +1,12 @@
 package t2.redes;
 
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class Network {
 
@@ -41,14 +45,29 @@ public class Network {
 
     private String getNetworkAddress() {
         try {
-            networkIp = InetAddress.getLocalHost().getHostAddress();
-            networkIp = networkIp.substring(0, networkIp.lastIndexOf(".") + 1);
+            Enumeration nis = NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = (NetworkInterface) nis.nextElement();
+
+                if (ni.isLoopback() == false) {
+                    ni.getHardwareAddress();
+                    List<InterfaceAddress> addresses = ni.getInterfaceAddresses();
+                    for (InterfaceAddress address : addresses) {
+                        InetAddress broadcast = address.getBroadcast();
+                        if (broadcast != null) {
+
+                            String host = address.getAddress().getHostAddress();
+                            networkIp = host.substring(0, host.lastIndexOf('.') + 1);
+                        }
+                    }
+                }
+            }
             return networkIp;
-        } catch (UnknownHostException ex) {
+        } catch (Exception ex) {
             return null;
         }
     }
-    
+
     public Agent getAgentByIp(String ip) {
         return agents.stream()
                 .filter((agent) -> agent.ipAddress.equals(ip))
