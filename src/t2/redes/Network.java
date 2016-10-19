@@ -19,7 +19,7 @@ public class Network {
     public ArrayList<String> addedIps;
 
     public Network() {
-        this.minIpRange = 0;
+        this.minIpRange = 1;
         this.maxIpRange = 255;
         addedIps = new ArrayList();
         notAddedIps = new ArrayList();

@@ -9,7 +9,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
@@ -36,8 +41,8 @@ public class App extends javax.swing.JFrame {
     boolean runThread;
 
     private ArrayList<Point> pointList = new ArrayList<>();
-
-    private int prev;
+    
+    DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
 
     public App() {
         initComponents();
@@ -299,7 +304,7 @@ public class App extends javax.swing.JFrame {
         String input = txtMinValue.getText();
         if (tryParseFloat(input)) {
             minValue = Float.parseFloat(input);
-            btnMinValue.setForeground(Color.green);
+            btnMinValue.setForeground(new Color(0, 153, 76));
         } else {
             btnMinValue.setForeground(Color.red);
         }
@@ -309,20 +314,20 @@ public class App extends javax.swing.JFrame {
         String input = txtMaxValue.getText();
         if (tryParseFloat(input)) {
             maxValue = Float.parseFloat(input);
-            btnMaxValue.setForeground(Color.green);
+            btnMaxValue.setForeground(new Color(0, 153, 76));
         } else {
             btnMaxValue.setForeground(Color.red);
         }
     }//GEN-LAST:event_btnMaxValueActionPerformed
 
     private void btnStartToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartToolActionPerformed
-        if (minValue > 0 && maxValue > 0 && minValue < maxValue) {
+        if (minValue >= 0 && maxValue > 0 && minValue < maxValue) {
             Agent agent = network.getAgentByIp(ipsCombo.getSelectedItem().toString());
             MibOption option = (MibOption) searchCombo.getSelectedItem();
             String oid = option.getValue() + "." + mibOptionsCombo.getSelectedItem().toString();
-            txtAlerts.setText(agent.getAgentInfo(oid));
+            txtAlerts.setText(agent.getAgentInfo(oid)+"\n");
             pnlGraphic.removeAll();
-            series = new TimeSeries(1, Millisecond.class);
+            series = new TimeSeries("Variation", Millisecond.class);
             TimeSeriesCollection dataset = new TimeSeriesCollection(series);
             lastValue = 10;
             series.add(new Millisecond(), 0);
@@ -371,7 +376,8 @@ public class App extends javax.swing.JFrame {
                             if (prevValue == 0) {
                                 prevValue = value - 1;
                             }
-                            txtAlerts.append(agentInfo + getAlertStatus(value) + "\n");
+                            Date cal = Calendar.getInstance().getTime();
+                            txtAlerts.append(agentInfo + getAlertStatus(value - prevValue) + " [ " + formatter.format(cal) + " ] " + "\n");
                             series.add(new Millisecond(), value - prevValue);
                             prevValue = value;
                         }
@@ -394,7 +400,7 @@ public class App extends javax.swing.JFrame {
         String input = txtInterval.getText();
         if (tryParseInt(input)) {
             interval = Integer.parseInt(input);
-            btnInterval.setForeground(Color.green);
+            btnInterval.setForeground(new Color(0, 153, 76));
         } else {
             btnInterval.setForeground(Color.red);
         }
@@ -436,7 +442,7 @@ public class App extends javax.swing.JFrame {
         });
     }
 
-    public String getAlertStatus(int value) {
+    public String getAlertStatus(double value) {
         if (value < minValue) {
             return "Lower than minimum value!";
         } else if (value > maxValue) {
