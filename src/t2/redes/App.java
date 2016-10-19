@@ -1,6 +1,7 @@
 package t2.redes;
 
-import java.awt.BorderLayout;
+import java.awt.*;
+import org.jfree.chart.*;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -12,6 +13,17 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.time.Millisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 public class App extends javax.swing.JFrame {
 
@@ -19,16 +31,13 @@ public class App extends javax.swing.JFrame {
     private float minValue;
     private float maxValue;
     private int interval;
+    TimeSeries series;
+    double lastValue;
+    boolean runThread;
+
     private ArrayList<Point> pointList = new ArrayList<>();
-    private Chart chart = new Chart();
-    private int beforeIn = -1;
-    private int beforeOut = -1;
-    private int actualIn = -1;
-    private int actualOut = -1;
 
-    private float beforeY;
-    private float actualY;
-
+    private int prev;
 
     public App() {
         initComponents();
@@ -65,6 +74,7 @@ public class App extends javax.swing.JFrame {
         jSeparator3 = new javax.swing.JSeparator();
         lblAlertOutput = new javax.swing.JLabel();
         pnlGraphic = new javax.swing.JPanel();
+        btnStop = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuNovaLeitura = new javax.swing.JRadioButtonMenuItem();
@@ -152,6 +162,13 @@ public class App extends javax.swing.JFrame {
             .addGap(0, 511, Short.MAX_VALUE)
         );
 
+        btnStop.setText("Stop");
+        btnStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnStopActionPerformed(evt);
+            }
+        });
+
         jMenuBar1.setBackground(new java.awt.Color(94, 94, 94));
 
         jMenu1.setForeground(new java.awt.Color(255, 255, 255));
@@ -176,45 +193,45 @@ public class App extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addComponent(lblAlertOutput)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(0, 6, Short.MAX_VALUE)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(btnStartTool, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblMibOptions)
+                                    .addComponent(lblChoseSearch)
+                                    .addComponent(lblChooseIp)
+                                    .addComponent(lblMinValue)
+                                    .addComponent(lblMaxValue)
+                                    .addComponent(lblInterval))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(layout.createSequentialGroup()
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(lblMibOptions)
-                                            .addComponent(lblChoseSearch)
-                                            .addComponent(lblChooseIp)
-                                            .addComponent(lblMinValue)
-                                            .addComponent(lblMaxValue)
-                                            .addComponent(lblInterval))
+                                            .addComponent(txtInterval, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 122, Short.MAX_VALUE)
+                                            .addComponent(txtMaxValue, javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(txtMinValue, javax.swing.GroupLayout.Alignment.LEADING))
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                                    .addComponent(txtInterval, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 122, Short.MAX_VALUE)
-                                                    .addComponent(txtMaxValue, javax.swing.GroupLayout.Alignment.LEADING)
-                                                    .addComponent(txtMinValue, javax.swing.GroupLayout.Alignment.LEADING))
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                    .addComponent(btnMinValue, javax.swing.GroupLayout.Alignment.TRAILING)
-                                                    .addComponent(btnMaxValue, javax.swing.GroupLayout.Alignment.TRAILING)
-                                                    .addComponent(btnInterval, javax.swing.GroupLayout.Alignment.TRAILING)))
-                                            .addComponent(mibOptionsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(ipsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(searchCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(btnMinValue, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(btnMaxValue, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(btnInterval, javax.swing.GroupLayout.Alignment.TRAILING)))
+                                    .addComponent(mibOptionsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(ipsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(searchCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addComponent(lblAlertOutput)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 107, Short.MAX_VALUE)
+                                .addComponent(btnStop, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnStartTool, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(pnlGraphic, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -259,7 +276,8 @@ public class App extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnStartTool)
-                            .addComponent(lblAlertOutput))
+                            .addComponent(lblAlertOutput)
+                            .addComponent(btnStop))
                         .addGap(18, 18, 18)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jSeparator3))
@@ -285,7 +303,6 @@ public class App extends javax.swing.JFrame {
         } else {
             btnMinValue.setForeground(Color.red);
         }
-
     }//GEN-LAST:event_btnMinValueActionPerformed
 
     private void btnMaxValueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMaxValueActionPerformed
@@ -304,21 +321,88 @@ public class App extends javax.swing.JFrame {
             MibOption option = (MibOption) searchCombo.getSelectedItem();
             String oid = option.getValue() + "." + mibOptionsCombo.getSelectedItem().toString();
             txtAlerts.setText(agent.getAgentInfo(oid));
+            pnlGraphic.removeAll();
+            series = new TimeSeries(1, Millisecond.class);
+            TimeSeriesCollection dataset = new TimeSeriesCollection(series);
+            lastValue = 10;
+            series.add(new Millisecond(), 0);
 
-            updateChart("Teste", 1, 2, 2, 1);
+            JFreeChart lineChart = ChartFactory.createTimeSeriesChart(
+                    searchCombo.getSelectedItem().toString(),
+                    "Time",
+                    "Value",
+                    dataset,
+                    true, true, false
+            );
+
+            lineChart.setBackgroundPaint(Color.white);
+
+            ChartPanel chartPanel = new ChartPanel(lineChart);
+            chartPanel.setPreferredSize(pnlGraphic.getSize());
+            JPanel panel = new JPanel();
+            panel.add(chartPanel);
+            JFrame frame = new JFrame();
+            frame.add(panel);
+            frame.pack();
+            pnlGraphic.add(panel);
+            pnlGraphic.revalidate();
+            pnlGraphic.repaint();
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    String agentIp = ipsCombo.getSelectedItem().toString();
+                    MibOption option = (MibOption) searchCombo.getSelectedItem();
+                    String oid = option.getValue() + "." + mibOptionsCombo.getSelectedItem().toString();
+                    Agent agent = network.getAgentByIp(agentIp);
+                    String agentInfo;
+                    String fullResult;
+                    double value;
+                    double prevValue = 0;
+                    runThread = true;
+                    while (runThread) {
+                        agentInfo = agent.getAgentInfo(oid);
+                        if (agentInfo == null) {
+                            value = 0;
+                            series.add(new Millisecond(), 0);
+                            txtAlerts.append("Falied to get agent info...\n");
+                        } else {
+                            fullResult = agentInfo.substring(agentInfo.indexOf("= ") + 2, agentInfo.indexOf("]"));
+                            value = Double.parseDouble(fullResult);
+                            if (prevValue == 0) {
+                                prevValue = value - 1;
+                            }
+                            txtAlerts.append(agentInfo + getAlertStatus(value) + "\n");
+                            series.add(new Millisecond(), value - prevValue);
+                            prevValue = value;
+                        }
+                        try {
+                            Thread.sleep(interval);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            };
+            t.start();
+
         } else {
             JOptionPane.showMessageDialog(null, "Please inform valid maximum and\nminimum limits, and a search interval.", "Error", JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_btnStartToolActionPerformed
 
     private void btnIntervalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIntervalActionPerformed
-        String input = txtMaxValue.getText();
-        if (tryParseFloat(input)) {
+        String input = txtInterval.getText();
+        if (tryParseInt(input)) {
             interval = Integer.parseInt(input);
             btnInterval.setForeground(Color.green);
+        } else {
+            btnInterval.setForeground(Color.red);
         }
-        btnInterval.setForeground(Color.red);
     }//GEN-LAST:event_btnIntervalActionPerformed
+
+    private void btnStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStopActionPerformed
+        runThread = false;
+    }//GEN-LAST:event_btnStopActionPerformed
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -352,21 +436,14 @@ public class App extends javax.swing.JFrame {
         });
     }
 
-    public void updateChart(String titulo, int inX, int inY, int outX, int outY) {
-        if (beforeIn != -1 && beforeOut != -1) {
-            actualIn = inY;
-            actualOut = outY;
-
-            pointList.add(new Point(inX, (actualIn - beforeIn), outX, (actualOut - beforeOut)));
-
-            beforeIn = actualIn;
-            beforeOut = actualOut;
+    public String getAlertStatus(int value) {
+        if (value < minValue) {
+            return "Lower than minimum value!";
+        } else if (value > maxValue) {
+            return "Higher than maximum value!";
         } else {
-            beforeIn = inY;
-            beforeOut = outY;
+            return "OK";
         }
-
-        chart.criaGrafico("Gráfico", titulo, pointList);
     }
 
     public void getAgents() {
@@ -440,11 +517,21 @@ public class App extends javax.swing.JFrame {
         }
     }
 
+    private boolean tryParseInt(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnInterval;
     private javax.swing.JButton btnMaxValue;
     private javax.swing.JButton btnMinValue;
     private javax.swing.JButton btnStartTool;
+    private javax.swing.JButton btnStop;
     private javax.swing.JComboBox<String> ipsCombo;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;

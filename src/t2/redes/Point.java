@@ -15,14 +15,10 @@ public class Point {
         this.outX = outX;
         this.outY = outY;
     }
-
-    public Point(int x, float y) {
-        this.inX = -1;
-        this.inY = -1;
-        this.outX = -1;
-        this.outY = -1;
-        this.x = x;
-        this.y = y;
+    
+    public Point(int x, int y) {
+        this.inX = x;
+        this.inY = y;
     }
 
     public float getInX() {
